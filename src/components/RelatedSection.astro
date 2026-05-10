@@ -1,6 +1,6 @@
 ---
 import { recipeUrl } from '../lib/slug';
-import { categoryImage } from '../lib/images';
+import { categoryImage, recipeImage } from '../lib/images';
 
 interface Props { recipeId: number; }
 const { recipeId } = Astro.props;
@@ -22,7 +22,12 @@ for (const g of groups) {
 }
 
 function renderTile(r: any) {
-  const img = categoryImage(r.category);
+  const cat = categoryImage(r.category);
+  const rec = recipeImage(r.id, r.title, r.category);
+  // sm/lg para el srcset; si la receta tiene foto propia (PDF), la misma URL para ambos.
+  const img = rec.source === 'pdf'
+    ? { sm: rec.src, lg: rec.src }
+    : { sm: cat.sm,  lg: cat.lg };
   return { ...r, href: recipeUrl(r.id, r.title), img };
 }
 ---

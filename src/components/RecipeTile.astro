@@ -1,6 +1,6 @@
 ---
 import { recipeUrl } from '../lib/slug';
-import { categoryImage } from '../lib/images';
+import { categoryImage, recipeImage } from '../lib/images';
 
 interface Props {
   id: number;
@@ -14,15 +14,20 @@ interface Props {
 
 const { id, title, category, servings_n, total_time_min, size = 'md', hideCat = false } = Astro.props;
 const href = recipeUrl(id, title);
-const img = categoryImage(category);
+const recipe = recipeImage(id, title, category);
+const cat = categoryImage(category);
+// Si la receta tiene su propia foto (PDF), úsala para todos los breakpoints.
+// Si no, cae a la imagen de categoría con sus tamaños sm/lg.
+const imgSm = recipe.source === 'pdf' ? recipe.src : cat.sm;
+const imgLg = recipe.source === 'pdf' ? recipe.src : cat.lg;
 ---
 <a class={`tile${size === 'lg' ? ' tile--lg' : ''}`} href={href}>
   <div class="tile__media">
     <img
-      src={img.sm}
-      srcset={`${img.sm} 480w, ${img.lg} 1280w`}
+      src={imgSm}
+      srcset={`${imgSm} 480w, ${imgLg} 1280w`}
       sizes="(max-width: 600px) 100vw, 320px"
-      alt={title}
+      alt={recipe.alt}
       loading="lazy"
       decoding="async"
     />
