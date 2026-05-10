@@ -1,0 +1,100 @@
+---
+import Layout from '../../components/Layout.astro';
+import RecipeTile from '../../components/RecipeTile.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { api } from '../../lib/api';
+import { breadcrumbJsonLd, collectionJsonLd, siteUrl } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const PER_PAGE = 24;
+  const { recipes } = await api.seoRecipes();
+  const sorted = [...recipes].sort((a, b) => a.title.localeCompare(b.title, 'es'));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: String(i + 1) },
+    props: {
+      pageNum: i + 1,
+      totalPages,
+      recipes: sorted.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+      total: sorted.length,
+    },
+  }));
+}
+
+interface Props {
+  pageNum: number;
+  totalPages: number;
+  recipes: Awaited<ReturnType<typeof api.seoRecipes>>['recipes'];
+  total: number;
+}
+const { pageNum, totalPages, recipes, total } = Astro.props as Props;
+
+const url = siteUrl(`/recetas/${pageNum}`);
+const title = pageNum === 1 ? 'Todas las recetas' : `Todas las recetas · página ${pageNum}`;
+const description =
+  `Listado completo de ${total} recetas tradicionales españolas. ` +
+  `Página ${pageNum} de ${totalPages}.`;
+
+const prev = pageNum > 1 ? `/recetas/${pageNum - 1}` : null;
+const next = pageNum < totalPages ? `/recetas/${pageNum + 1}` : null;
+
+const ld = [
+  collectionJsonLd(title, description, url),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    { name: 'Recetas', url: siteUrl('/recetas/1') },
+  ]),
+];
+
+const visible: Array<number | null> = [];
+for (let p = 1; p <= totalPages; p++) {
+  const keep = p === 1 || p === totalPages || Math.abs(p - pageNum) <= 2;
+  if (keep) {
+    if (visible.length && (visible[visible.length - 1] as number | null) !== null) {
+      const last = visible[visible.length - 1] as number;
+      if (p - last > 1) visible.push(null);
+    }
+    visible.push(p);
+  }
+}
+---
+<Layout title={title} description={description} canonical={url} jsonLd={ld}>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="/">Inicio</a> › <span>Recetas{pageNum > 1 ? ` · página ${pageNum}` : ''}</span>
+    </nav>
+
+    <header style="margin: 1rem 0 2.5rem; max-width: 720px;">
+      <p class="kicker">Catálogo completo</p>
+      <h1>Todas las recetas</h1>
+      <p class="dek">{total} recetas tradicionales del recetario · página {pageNum} de {totalPages}.</p>
+    </header>
+
+    <AdSlot slot="list-leaderboard" format="leaderboard" />
+
+    <div class="feature-grid">
+      {recipes.map((r, i) => (
+        <>
+          <RecipeTile id={r.id} title={r.title} category={r.category}
+                      servings_n={r.servings_n} total_time_min={r.total_time_min} />
+        </>
+      ))}
+    </div>
+
+    <AdSlot slot={`list-mid-${pageNum}`} format="inline" />
+
+    <nav class="pagination" aria-label="Paginación">
+      {prev && <a href={prev} rel="prev">← Anterior</a>}
+      {visible.map((p) =>
+        p === null ? (
+          <span>…</span>
+        ) : p === pageNum ? (
+          <span class="current">{p}</span>
+        ) : (
+          <a href={`/recetas/${p}`}>{p}</a>
+        ),
+      )}
+      {next && <a href={next} rel="next">Siguiente →</a>}
+    </nav>
+  </div>
+</Layout>

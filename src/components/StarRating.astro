@@ -1,0 +1,74 @@
+---
+interface Props { recipeId: number; }
+const { recipeId } = Astro.props;
+const apiBase = (import.meta.env.PUBLIC_API_BASE || 'http://localhost:8000').replace(/\/$/, '');
+---
+<section class="rating" data-rating data-recipe={recipeId} data-api={apiBase}>
+  <h3 class="rating__title">¿Te ha gustado esta receta?</h3>
+  <div class="rating__stars" role="radiogroup" aria-label="Valoración">
+    {[1, 2, 3, 4, 5].map((n) => (
+      <button type="button" data-star={n} aria-label={`${n} estrellas`}>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </button>
+    ))}
+  </div>
+  <div class="rating__meta" data-rating-meta>Cargando…</div>
+</section>
+
+<script is:inline>
+  (function () {
+    function clientId() {
+      let id = localStorage.getItem('mr_cid');
+      if (!id) {
+        id = 'c_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        localStorage.setItem('mr_cid', id);
+      }
+      return id;
+    }
+    document.querySelectorAll('[data-rating]').forEach((root) => {
+      const recipeId = root.dataset.recipe;
+      const api = root.dataset.api;
+      const meta = root.querySelector('[data-rating-meta]');
+      const stars = root.querySelectorAll('[data-star]');
+      let userStars = parseInt(localStorage.getItem('mr_rate_' + recipeId) || '0', 10);
+
+      function paint(n) {
+        stars.forEach((s) => s.classList.toggle('is-on', parseInt(s.dataset.star, 10) <= n));
+      }
+      function showMeta(avg, count) {
+        const yours = userStars ? ` · tu voto: ${userStars}★` : '';
+        meta.textContent = count
+          ? `${avg.toFixed(1)} ★ · ${count} ${count === 1 ? 'voto' : 'votos'}${yours}`
+          : 'Sé el primero en valorar.';
+      }
+
+      fetch(`${api}/api/recipes/${recipeId}/rating`).then(r => r.json()).then((d) => {
+        showMeta(d.avg || 0, d.count || 0);
+        if (userStars) paint(userStars);
+      }).catch(() => meta.textContent = '');
+
+      stars.forEach((s) => {
+        s.addEventListener('mouseenter', () => paint(parseInt(s.dataset.star, 10)));
+        s.addEventListener('mouseleave', () => paint(userStars));
+        s.addEventListener('click', async () => {
+          const n = parseInt(s.dataset.star, 10);
+          userStars = n;
+          paint(n);
+          localStorage.setItem('mr_rate_' + recipeId, String(n));
+          meta.textContent = 'Enviando…';
+          try {
+            const res = await fetch(`${api}/api/recipes/${recipeId}/rating`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ stars: n, client_id: clientId() }),
+            });
+            const d = await res.json();
+            showMeta(d.avg || 0, d.count || 0);
+          } catch {
+            meta.textContent = 'No se pudo guardar.';
+          }
+        });
+      });
+    });
+  })();
+</script>

@@ -1,0 +1,7 @@
+---
+interface Props { href?: string; }
+const { href = '/' } = Astro.props;
+---
+<a class="brand" href={href} aria-label="milrecetas">
+  <span class="brand__thin">mil</span><span class="brand__bold">recetas</span>
+</a>

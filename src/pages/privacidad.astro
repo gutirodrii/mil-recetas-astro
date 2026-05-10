@@ -1,0 +1,17 @@
+---
+import Layout from '../components/Layout.astro';
+import { siteUrl } from '../lib/seo';
+---
+<Layout
+  title="Política de privacidad"
+  description="Política de privacidad del Recetario."
+  canonical={siteUrl('/privacidad')}
+>
+  <div class="container-narrow" style="padding-top: 2rem;">
+    <p class="kicker">Información legal</p>
+    <h1>Política de privacidad</h1>
+    <p>Este sitio puede usar Google AdSense para mostrar anuncios. AdSense puede instalar cookies en tu navegador para personalizar publicidad.</p>
+    <p>Las conversaciones del chat se guardan en nuestra base de datos para mantener el historial. No se comparten con terceros.</p>
+    <p>Puedes gestionar tus preferencias de cookies desde el banner de consentimiento.</p>
+  </div>
+</Layout>

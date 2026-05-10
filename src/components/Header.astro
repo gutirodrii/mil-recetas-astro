@@ -1,0 +1,40 @@
+---
+import Brand from './Brand.astro';
+import { api } from '../lib/api';
+
+let cats: Array<{ name: string; slug: string }> = [];
+try {
+  const r = await api.seoCategories();
+  cats = r.categories.slice(0, 8).map((c) => ({ name: c.name, slug: c.slug }));
+} catch {}
+---
+<header class="site-header">
+  <div class="site-header__inner">
+    <div class="site-header__brand"><Brand /></div>
+
+    <button class="site-header__toggle" aria-label="Menú" aria-expanded="false" data-nav-toggle>☰</button>
+
+    <nav class="site-header__nav" id="site-nav" aria-label="Principal">
+      <a href="/">Inicio</a>
+      <a href="/recetas/1">Recetas</a>
+      <a href="/ingredientes">Ingredientes</a>
+      <form class="site-header__search" role="search" action="/recetas/1" method="get">
+        <input type="search" name="q" placeholder="Buscar receta…" aria-label="Buscar" />
+        <button type="submit" aria-label="Buscar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </button>
+      </form>
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-nav-toggle]');
+    if (!t) return;
+    const nav = document.getElementById('site-nav');
+    if (!nav) return;
+    const open = nav.classList.toggle('is-open');
+    t.setAttribute('aria-expanded', String(open));
+  });
+</script>

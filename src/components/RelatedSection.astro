@@ -1,0 +1,56 @@
+---
+import { recipeUrl } from '../lib/slug';
+import { categoryImage } from '../lib/images';
+
+interface Props { recipeId: number; }
+const { recipeId } = Astro.props;
+const apiBase = (import.meta.env.PUBLIC_API_BASE || 'http://localhost:8000').replace(/\/$/, '');
+
+const groups = [
+  { id: 'related',   title: 'Recetas relacionadas',  endpoint: `/api/recipes/${recipeId}/related?limit=4` },
+  { id: 'popular',   title: 'Lo más cocinado',       endpoint: `/api/recipes/popular?limit=4` },
+  { id: 'top',       title: 'Mejor valoradas',       endpoint: `/api/recipes/top-rated?limit=4` },
+];
+
+// Pre-fetch en build (cuando el backend está vivo) para evitar layout shift.
+const initial: Record<string, any[]> = {};
+for (const g of groups) {
+  try {
+    const res = await fetch(apiBase + g.endpoint);
+    if (res.ok) initial[g.id] = (await res.json()).recipes || [];
+  } catch { initial[g.id] = []; }
+}
+
+function renderTile(r: any) {
+  const img = categoryImage(r.category);
+  return { ...r, href: recipeUrl(r.id, r.title), img };
+}
+---
+<aside class="related" aria-label="Sigue leyendo">
+  {groups.map((g) => {
+    const items = (initial[g.id] || []).map(renderTile);
+    if (!items.length) return null;
+    return (
+      <section style="margin-top: 3rem;">
+        <div class="section-head"><h2>{g.title}</h2></div>
+        <div class="feature-grid">
+          {items.map((r: any) => (
+            <a class="tile" href={r.href}>
+              <div class="tile__media">
+                <img src={r.img.sm} srcset={`${r.img.sm} 480w, ${r.img.lg} 1280w`}
+                     sizes="(max-width: 600px) 50vw, 280px" alt={r.title} loading="lazy" />
+              </div>
+              {r.category && <div class="tile__cat">{r.category}</div>}
+              <h3 class="tile__title">{r.title}</h3>
+              <div class="tile__meta">
+                {r.servings_n ? `${r.servings_n} raciones` : ''}
+                {r.servings_n && r.total_time_min ? ' · ' : ''}
+                {r.total_time_min ? `${r.total_time_min} min` : ''}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    );
+  })}
+</aside>

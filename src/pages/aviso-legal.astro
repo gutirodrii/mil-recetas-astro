@@ -1,0 +1,16 @@
+---
+import Layout from '../components/Layout.astro';
+import { siteUrl } from '../lib/seo';
+---
+<Layout
+  title="Aviso legal"
+  description="Aviso legal del Recetario."
+  canonical={siteUrl('/aviso-legal')}
+>
+  <div class="container-narrow" style="padding-top: 2rem;">
+    <p class="kicker">Información legal</p>
+    <h1>Aviso legal</h1>
+    <p>Las recetas proceden del libro <em>1000 recetas de oro</em> de Karlos Arguiñano. Sitio personal sin ánimo de lucro directo.</p>
+    <p>Para cualquier consulta, contacta en <a href="mailto:contacto@example.com">contacto@example.com</a>.</p>
+  </div>
+</Layout>

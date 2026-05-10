@@ -1,0 +1,100 @@
+---
+import Layout from '../components/Layout.astro';
+import RecipeTile from '../components/RecipeTile.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { api } from '../lib/api';
+import { siteUrl } from '../lib/seo';
+import { categoryUrl } from '../lib/slug';
+import { categoryImage, heroImage } from '../lib/images';
+
+let featured: Awaited<ReturnType<typeof api.seoFeatured>>['recipes'] = [];
+let popular: Awaited<ReturnType<typeof api.popularRecipes>>['recipes'] = [];
+let categories: Awaited<ReturnType<typeof api.seoCategories>>['categories'] = [];
+try {
+  featured = (await api.seoFeatured(8)).recipes;
+  popular = (await api.popularRecipes(4)).recipes;
+  categories = (await api.seoCategories()).categories;
+} catch (e) {
+  console.warn('[index] backend no disponible:', e);
+}
+
+const description =
+  'Mil recetas tradicionales españolas, una para cada día. Cocina sencilla, ' +
+  'ingredientes de siempre y resultados de los de toda la vida.';
+---
+<Layout
+  title="milrecetas · 1000 recetas tradicionales españolas"
+  description={description}
+  canonical={siteUrl('/')}
+>
+  <section class="hero">
+    <div class="hero__media">
+      <img src={heroImage.lg} alt="" loading="eager" fetchpriority="high" />
+      <div class="hero__overlay">
+        <div class="hero__inner">
+          <p class="kicker" style="color: #ffd9c2;">El recetario de toda la vida</p>
+          <h1>Mil recetas tradicionales, una para cada día.</h1>
+          <p class="hero__dek">
+            Cocina española sencilla, ingredientes de siempre y el sabor que recuerdas.
+            Sin trucos, sin prisa, sin postureo.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    {popular.length > 0 && (
+      <section>
+        <div class="section-head">
+          <h2>Lo que se cocina ahora</h2>
+          <a href="/recetas/1">Ver todas →</a>
+        </div>
+        <div class="feature-grid">
+          {popular.map((r) => (
+            <RecipeTile id={r.id} title={r.title} category={r.category}
+                        servings_n={r.servings_n} total_time_min={r.total_time_min} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <AdSlot slot="home-leaderboard" format="leaderboard" />
+
+    {featured.length > 0 && (
+      <section>
+        <div class="section-head">
+          <h2>Imprescindibles del recetario</h2>
+        </div>
+        <div class="feature-grid feature-grid--mosaic">
+          {featured.map((r) => (
+            <RecipeTile id={r.id} title={r.title} category={r.category}
+                        servings_n={r.servings_n} total_time_min={r.total_time_min} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    {categories.length > 0 && (
+      <section>
+        <div class="section-head">
+          <h2>Por categorías</h2>
+        </div>
+        <div class="cat-mosaic">
+          {categories.map((c) => {
+            const img = categoryImage(c.name);
+            return (
+              <a class="cat-tile" href={categoryUrl(c.slug)}>
+                <img src={img.lg} alt={c.name} loading="lazy" />
+                {c.recipe_count !== undefined && (
+                  <span class="cat-tile__count">{c.recipe_count} recetas</span>
+                )}
+                <span class="cat-tile__label">{c.name}</span>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>

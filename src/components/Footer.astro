@@ -1,0 +1,58 @@
+---
+import Brand from './Brand.astro';
+import NewsletterForm from './NewsletterForm.astro';
+import { api } from '../lib/api';
+import { categoryUrl } from '../lib/slug';
+
+let cats: Array<{ name: string; slug: string }> = [];
+try {
+  const r = await api.seoCategories();
+  cats = r.categories.slice(0, 8).map((c) => ({ name: c.name, slug: c.slug }));
+} catch {}
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__cols">
+      <div>
+        <Brand />
+        <p style="margin: .85rem 0 0; max-width: 32ch; color: var(--c-grafito); font-size: .95rem;">
+          Mil recetas tradicionales españolas, en una página clara y sin prisa.
+          Cocina sencilla, ingredientes de siempre.
+        </p>
+      </div>
+
+      <div>
+        <h4>Categorías</h4>
+        <ul>
+          {cats.map((c) => (
+            <li><a href={categoryUrl(c.slug)}>{c.name}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h4>Útil</h4>
+        <ul>
+          <li><a href="/ingredientes">Por ingrediente</a></li>
+          <li><a href="/feed.xml">RSS</a></li>
+          <li><a href="/aviso-legal">Aviso legal</a></li>
+          <li><a href="/privacidad">Privacidad</a></li>
+        </ul>
+      </div>
+
+      <div class="newsletter">
+        <h4>Newsletter</h4>
+        <p style="margin: 0; color: var(--c-grafito); font-size: .9rem;">
+          Una receta nueva cada semana. Sin spam.
+        </p>
+        <NewsletterForm />
+      </div>
+    </div>
+
+    <div class="site-footer__bar">
+      <div>© {year} milrecetas · mil-recetas.com</div>
+      <div>Hecho con cariño en España 🇪🇸</div>
+    </div>
+  </div>
+</footer>

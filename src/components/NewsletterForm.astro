@@ -1,0 +1,38 @@
+---
+const apiBase = (import.meta.env.PUBLIC_API_BASE || 'http://localhost:8000').replace(/\/$/, '');
+---
+<form data-newsletter data-api={apiBase} novalidate>
+  <input type="email" name="email" placeholder="tu@email.com" required aria-label="Email" />
+  <button type="submit">Suscribirme</button>
+</form>
+<div class="newsletter__msg" data-newsletter-msg role="status" aria-live="polite"></div>
+
+<script is:inline>
+  document.querySelectorAll('[data-newsletter]').forEach((form) => {
+    const msg = form.parentElement.querySelector('[data-newsletter-msg]');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = 'Email inválido.';
+        msg.classList.add('is-error');
+        return;
+      }
+      msg.textContent = 'Enviando…';
+      msg.classList.remove('is-error');
+      try {
+        const res = await fetch(form.dataset.api + '/api/newsletter', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        msg.textContent = '¡Gracias! Recibirás novedades.';
+        form.reset();
+      } catch (err) {
+        msg.textContent = 'No se pudo guardar. Intenta de nuevo.';
+        msg.classList.add('is-error');
+      }
+    });
+  });
+</script>

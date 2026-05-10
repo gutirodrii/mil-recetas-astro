@@ -1,0 +1,40 @@
+---
+import Layout from '../components/Layout.astro';
+import { api } from '../lib/api';
+import { ingredientUrl } from '../lib/slug';
+import { breadcrumbJsonLd, collectionJsonLd, siteUrl } from '../lib/seo';
+
+const { ingredients } = await api.seoTopIngredients(200);
+const sorted = [...ingredients].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
+const url = siteUrl('/ingredientes');
+const description = `Explora las recetas por ingrediente. ${ingredients.length} ingredientes con recetas en el recetario tradicional español.`;
+const ld = [
+  collectionJsonLd('Ingredientes', description, url),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    { name: 'Ingredientes', url },
+  ]),
+];
+---
+<Layout title="Ingredientes" description={description} canonical={url} jsonLd={ld}>
+  <div class="container">
+    <nav class="breadcrumb"><a href="/">Inicio</a> › <span>Ingredientes</span></nav>
+    <header style="margin: 1.5rem 0 2rem; max-width: 720px;">
+      <p class="kicker">Índice</p>
+      <h1>Recetas por ingrediente</h1>
+      <p class="dek">{ingredients.length} ingredientes principales del recetario.</p>
+    </header>
+
+    <ul class="ing-list">
+      {sorted.map((i) => (
+        <li>
+          <a href={ingredientUrl(i.id, i.name)}>
+            <span class="name">{i.name}</span>
+            <span class="count">{i.recipe_count}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Layout>

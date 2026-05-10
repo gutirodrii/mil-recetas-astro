@@ -1,0 +1,37 @@
+---
+import { recipeUrl } from '../lib/slug';
+import { categoryImage } from '../lib/images';
+
+interface Props {
+  id: number;
+  title: string;
+  category: string | null;
+  servings_n?: number | null;
+  total_time_min?: number | null;
+  size?: 'sm' | 'md' | 'lg';
+  hideCat?: boolean;
+}
+
+const { id, title, category, servings_n, total_time_min, size = 'md', hideCat = false } = Astro.props;
+const href = recipeUrl(id, title);
+const img = categoryImage(category);
+---
+<a class={`tile${size === 'lg' ? ' tile--lg' : ''}`} href={href}>
+  <div class="tile__media">
+    <img
+      src={img.sm}
+      srcset={`${img.sm} 480w, ${img.lg} 1280w`}
+      sizes="(max-width: 600px) 100vw, 320px"
+      alt={title}
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+  {!hideCat && category && <div class="tile__cat">{category}</div>}
+  <h3 class="tile__title">{title}</h3>
+  <div class="tile__meta">
+    {servings_n ? `${servings_n} raciones` : ''}
+    {servings_n && total_time_min ? ' · ' : ''}
+    {total_time_min ? `${total_time_min} min` : ''}
+  </div>
+</a>

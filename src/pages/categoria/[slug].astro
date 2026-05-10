@@ -1,0 +1,71 @@
+---
+import Layout from '../../components/Layout.astro';
+import RecipeTile from '../../components/RecipeTile.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { api } from '../../lib/api';
+import { breadcrumbJsonLd, collectionJsonLd, siteUrl, truncate } from '../../lib/seo';
+import { categoryImage } from '../../lib/images';
+
+export async function getStaticPaths() {
+  const { categories } = await api.seoCategories();
+  return categories.map((c) => ({
+    params: { slug: c.slug },
+    props: { name: c.name, slug: c.slug, count: c.recipe_count ?? 0 },
+  }));
+}
+
+interface Props { name: string; slug: string; count: number; }
+const { name, slug, count } = Astro.props as Props;
+const { recipes } = await api.seoCategoryRecipes(slug);
+const img = categoryImage(name);
+
+const url = siteUrl(`/categoria/${slug}`);
+const description = truncate(
+  `${count} recetas de ${name.toLowerCase()} del recetario tradicional español. ` +
+  `Cocina sencilla, ingredientes de siempre.`,
+  160,
+);
+
+const ld = [
+  collectionJsonLd(`Recetas de ${name}`, description, url),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    { name, url },
+  ]),
+];
+---
+<Layout title={`Recetas de ${name}`} description={description} canonical={url}
+        ogImage={siteUrl(img.base)} jsonLd={ld}>
+  <section class="hero">
+    <div class="hero__media">
+      <img src={img.lg} alt={name} loading="eager" fetchpriority="high" />
+      <div class="hero__overlay">
+        <div class="hero__inner">
+          <p class="kicker" style="color: #ffd9c2;">Categoría</p>
+          <h1>{name}</h1>
+          <p class="hero__dek">{recipes.length} recetas para descubrir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="/">Inicio</a> › <span>{name}</span>
+    </nav>
+
+    <AdSlot slot={`cat-${slug}-leaderboard`} format="leaderboard" />
+
+    <div class="feature-grid">
+      {recipes.map((r, i) => (
+        <>
+          <RecipeTile id={r.id} title={r.title} category={r.category}
+                      servings_n={r.servings_n} total_time_min={r.total_time_min} hideCat />
+          {(i + 1) % 12 === 0 && i < recipes.length - 1 && (
+            <AdSlot slot={`cat-${slug}-inline-${Math.floor(i / 12)}`} format="inline" />
+          )}
+        </>
+      ))}
+    </div>
+  </div>
+</Layout>

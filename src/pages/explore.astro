@@ -1,0 +1,53 @@
+---
+import Layout from '../components/Layout.astro';
+import Explore from '../components/Explore';
+import { siteUrl } from '../lib/seo';
+import { api, type RecipeSummary } from '../lib/api';
+
+let initialRecipes: RecipeSummary[] = [];
+let initialTotal = 0;
+try {
+  const res = await fetch(`${api.apiBase}/recipes?limit=30&offset=0`);
+  if (res.ok) {
+    const data = await res.json();
+    initialRecipes = data.recipes || [];
+    initialTotal = data.total || 0;
+  }
+} catch (_) {
+  // backend not reachable at build time → island fetches on hydrate
+}
+---
+<Layout
+  title="Explorar recetas con filtros"
+  description="Filtra recetas por categoría e ingredientes."
+  canonical={siteUrl('/explore')}
+  noindex
+>
+  <div class="container exp-container">
+    <header class="exp-head">
+      <p class="kicker">Explorar</p>
+      <h1>Recetas</h1>
+      <p class="dek">Filtra por ingredientes, categoría o palabras clave.</p>
+    </header>
+
+    <Explore
+      client:load
+      initialRecipes={initialRecipes}
+      initialTotal={initialTotal}
+    />
+
+    {/* Server-rendered fallback for crawlers / no-JS users */}
+    <noscript>
+      <div class="exp-fallback">
+        <ul>
+          {initialRecipes.map((r) => (
+            <li>
+              <strong>{r.title}</strong>
+              <span> — {r.category || '—'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </noscript>
+  </div>
+</Layout>

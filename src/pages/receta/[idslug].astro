@@ -1,0 +1,163 @@
+---
+import Layout from '../../components/Layout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import StarRating from '../../components/StarRating.astro';
+import RelatedSection from '../../components/RelatedSection.astro';
+import { api, type RecipeDetail, type RecipeSummary } from '../../lib/api';
+import { recipeUrl, slugify, parseIdSlug, categoryUrl } from '../../lib/slug';
+import { metaDescription, recipeJsonLd, breadcrumbJsonLd, ogImageFor, siteUrl } from '../../lib/seo';
+import { categoryImage } from '../../lib/images';
+
+export async function getStaticPaths() {
+  const { recipes } = await api.seoRecipes();
+  return recipes.map((r: RecipeSummary) => ({
+    params: { idslug: `${r.id}-${slugify(r.title)}` },
+    props: { id: r.id },
+  }));
+}
+
+interface Props { id: number; }
+const { id } = Astro.props as Props;
+
+const parsed = parseIdSlug(Astro.params.idslug ?? '');
+if (parsed !== id) throw new Error(`Mismatch idslug for recipe ${id}`);
+
+const recipe = await api.recipe(id);
+const url = siteUrl(recipeUrl(recipe.id, recipe.title));
+const description = metaDescription(recipe.title, recipe.instructions, recipe.category);
+const ogImage = ogImageFor(recipe.category);
+const img = categoryImage(recipe.category);
+
+const ld = [
+  recipeJsonLd({
+    id: recipe.id,
+    title: recipe.title,
+    category: recipe.category,
+    servings_n: recipe.servings_original,
+    servings_text: recipe.servings_text,
+    total_time_min: recipe.total_time_min,
+    instructions: recipe.instructions,
+    ingredients: recipe.ingredients.map((i) => ({ raw_text: i.raw_text, name: i.name })),
+    url,
+    image: ogImage,
+  }),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    ...(recipe.category
+      ? [{ name: recipe.category, url: siteUrl(categoryUrl(slugify(recipe.category))) }]
+      : []),
+    { name: recipe.title, url },
+  ]),
+];
+
+type Ing = (typeof recipe.ingredients)[number];
+const sections = new Map<string, Ing[]>();
+for (const ing of recipe.ingredients) {
+  const key = ing.section || '';
+  if (!sections.has(key)) sections.set(key, []);
+  sections.get(key)!.push(ing);
+}
+
+// Pasos: split por saltos de línea o números.
+const steps = recipe.instructions
+  .split(/\n+|(?<=\.)\s+(?=\d+[\.\)])/)
+  .map((s) => s.replace(/^\d+[\.\)]\s*/, '').trim())
+  .filter(Boolean);
+
+const titleNice = recipe.title
+  .toLowerCase()
+  .replace(/(^|\s)\S/g, (m) => m.toUpperCase());
+---
+<Layout
+  title={titleNice}
+  description={description}
+  canonical={url}
+  ogImage={ogImage}
+  ogType="article"
+  jsonLd={ld}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="/">Inicio</a> ›
+      {recipe.category && (
+        <>
+          <a href={categoryUrl(slugify(recipe.category))}>{recipe.category}</a> ›
+        </>
+      )}
+      <span>{titleNice}</span>
+    </nav>
+  </div>
+
+  <figure class="article-hero">
+    <img src={img.lg} alt={titleNice} loading="eager" fetchpriority="high" />
+  </figure>
+
+  <header class="article-head">
+    {recipe.category && (
+      <span class="kicker">
+        <a href={categoryUrl(slugify(recipe.category))}>{recipe.category}</a>
+      </span>
+    )}
+    <h1>{titleNice}</h1>
+    <p class="dek">
+      Una receta clásica del recetario de milrecetas, paso a paso, con cantidades reales
+      y sin atajos.
+    </p>
+    <div class="meta-row">
+      {recipe.servings_text && <span><strong>{recipe.servings_text}</strong></span>}
+      {recipe.total_time_min && <span><strong>{recipe.total_time_min} min</strong></span>}
+      {recipe.difficulty && <span><strong>{recipe.difficulty}</strong></span>}
+    </div>
+    <p class="byline">Del recetario clásico de milrecetas</p>
+  </header>
+
+  <article class="article-prose">
+    <p class="lead">
+      {recipe.category ? `Plato de ${recipe.category.toLowerCase()}` : 'Receta tradicional'}
+      {recipe.servings_text ? ` para ${recipe.servings_text.toLowerCase()}` : ''}
+      {recipe.total_time_min ? `, lista en ${recipe.total_time_min} minutos` : ''}.
+      Sigue los pasos con calma y los ingredientes harán el resto.
+    </p>
+
+    <AdSlot slot={`recipe-${recipe.id}-intro`} format="leaderboard" />
+
+    <div class="ingredients-block">
+      <h2>Ingredientes</h2>
+      {[...sections.entries()].map(([section, items]) => (
+        <>
+          {section && <h3 style="color: var(--c-oliva-dark); margin-top: 1rem;">{section}</h3>}
+          <ul>
+            {items.map((i) => (
+              <li>{i.raw_text}</li>
+            ))}
+          </ul>
+        </>
+      ))}
+    </div>
+
+    <AdSlot slot={`recipe-${recipe.id}-mid`} format="inline" />
+
+    <h2>Elaboración</h2>
+    {steps.length > 1 ? (
+      <ol>
+        {steps.map((s) => <li>{s}</li>)}
+      </ol>
+    ) : (
+      <p style="white-space: pre-wrap;">{recipe.instructions}</p>
+    )}
+
+    <AdSlot slot={`recipe-${recipe.id}-end`} format="leaderboard" />
+
+    <StarRating recipeId={recipe.id} />
+  </article>
+
+  <hr class="section-rule" />
+
+  <div class="container">
+    <RelatedSection recipeId={recipe.id} />
+  </div>
+
+  <script is:inline define:vars={{ id: recipe.id, apiBase: (import.meta.env.PUBLIC_API_BASE || 'http://localhost:8000').replace(/\/$/, '') }}>
+    fetch(`${apiBase}/api/recipes/${id}/view`, { method: 'POST', keepalive: true }).catch(() => {});
+  </script>
+</Layout>

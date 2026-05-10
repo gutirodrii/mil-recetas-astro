@@ -1,0 +1,61 @@
+---
+import Layout from '../../components/Layout.astro';
+import RecipeTile from '../../components/RecipeTile.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { api } from '../../lib/api';
+import { ingredientUrl, slugify } from '../../lib/slug';
+import { breadcrumbJsonLd, collectionJsonLd, siteUrl, truncate } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const { ingredients } = await api.seoTopIngredients(200);
+  return ingredients.map((ing) => ({
+    params: { idslug: `${ing.id}-${slugify(ing.name)}` },
+    props: { id: ing.id, name: ing.name, count: ing.recipe_count ?? 0 },
+  }));
+}
+
+interface Props { id: number; name: string; count: number; }
+const { id, name, count } = Astro.props as Props;
+const { recipes } = await api.seoIngredientRecipes(id);
+
+const url = siteUrl(ingredientUrl(id, name));
+const description = truncate(
+  `${recipes.length} recetas con ${name}. Todas las maneras de cocinar ${name} ` +
+  `del recetario tradicional español.`,
+  160,
+);
+const title = `Recetas con ${name}`;
+
+const ld = [
+  collectionJsonLd(title, description, url),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    { name: 'Ingredientes', url: siteUrl('/ingredientes') },
+    { name, url },
+  ]),
+];
+---
+<Layout title={title} description={description} canonical={url} jsonLd={ld}>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="/">Inicio</a> ›
+      <a href="/ingredientes">Ingredientes</a> ›
+      <span style="text-transform: capitalize;">{name}</span>
+    </nav>
+
+    <header style="margin: 1.5rem 0 2.5rem; max-width: 720px;">
+      <p class="kicker">Por ingrediente</p>
+      <h1 style="text-transform: capitalize;">{name}</h1>
+      <p class="dek">{recipes.length} recetas del recetario que llevan {name.toLowerCase()}.</p>
+    </header>
+
+    <AdSlot slot={`ing-${id}-leaderboard`} format="leaderboard" />
+
+    <div class="feature-grid">
+      {recipes.map((r) => (
+        <RecipeTile id={r.id} title={r.title} category={r.category}
+                    servings_n={r.servings_n} total_time_min={r.total_time_min} />
+      ))}
+    </div>
+  </div>
+</Layout>
