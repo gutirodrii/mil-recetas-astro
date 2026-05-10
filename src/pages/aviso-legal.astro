@@ -1,16 +1,142 @@
 ---
 import Layout from '../components/Layout.astro';
 import { siteUrl } from '../lib/seo';
+
+const lastUpdated = '11 de mayo de 2026';
 ---
 <Layout
   title="Aviso legal"
-  description="Aviso legal del Recetario."
+  description="Aviso legal y condiciones de uso del sitio Mil Recetas, conforme a la LSSI-CE."
   canonical={siteUrl('/aviso-legal')}
 >
   <div class="container-narrow" style="padding-top: 2rem;">
     <p class="kicker">Información legal</p>
-    <h1>Aviso legal</h1>
-    <p>Las recetas proceden del libro <em>1000 recetas de oro</em> de Karlos Arguiñano. Sitio personal sin ánimo de lucro directo.</p>
-    <p>Para cualquier consulta, contacta en <a href="mailto:contacto@example.com">contacto@example.com</a>.</p>
+    <h1>Aviso legal y condiciones de uso</h1>
+    <p><small>Última actualización: {lastUpdated}</small></p>
+
+    <h2>1. Información del titular</h2>
+    <p>
+      En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios
+      de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa
+      de los siguientes datos del titular de este sitio web:
+    </p>
+    <ul>
+      <li><strong>Titular:</strong> David Gutierrez</li>
+      <li><strong>NIF/CIF:</strong> ****548**</li>
+      <li><strong>Domicilio:</strong> Sevilla, España</li>
+      <li><strong>Correo electrónico de contacto:</strong> <a href="mailto:contacto@mil-recetas.com">contacto@mil-recetas.com</a></li>
+      <li><strong>Sitio web:</strong> <a href={siteUrl('/')}>mil-recetas.com</a></li>
+    </ul>
+
+    <h2>2. Objeto</h2>
+    <p>
+      El presente aviso legal regula el uso del sitio web accesible desde el dominio
+      mil-recetas.com (en adelante, «el Sitio»), cuyo objeto es la divulgación
+      gratuita de recetas de cocina, ingredientes y contenidos relacionados con la
+      gastronomía. El acceso al Sitio atribuye la condición de usuario e implica la
+      aceptación plena de las condiciones recogidas en este aviso.
+    </p>
+
+    <h2>3. Condiciones de uso</h2>
+    <p>El usuario se compromete a hacer un uso adecuado de los contenidos y servicios del Sitio y a no emplearlos para:</p>
+    <ul>
+      <li>Realizar actividades ilícitas, ilegales o contrarias a la buena fe y al orden público.</li>
+      <li>Difundir contenidos o propaganda de carácter racista, xenófobo, ilegal, de apología del terrorismo o atentatorio contra los derechos humanos.</li>
+      <li>Provocar daños en los sistemas físicos y lógicos del titular, de sus proveedores o de terceros, o introducir virus informáticos o cualquier otro sistema susceptible de causar daños.</li>
+      <li>Intentar acceder y, en su caso, utilizar las cuentas de correo electrónico de otros usuarios y modificar o manipular sus mensajes.</li>
+    </ul>
+
+    <h2>4. Propiedad intelectual e industrial</h2>
+    <p>
+      Todos los contenidos del Sitio, incluidos a título enunciativo textos,
+      fotografías, gráficos, imágenes, iconos, tecnología, software, enlaces y
+      demás contenidos audiovisuales, así como su diseño gráfico y códigos fuente,
+      son propiedad intelectual del titular o de terceros, sin que puedan
+      entenderse cedidos al usuario ninguno de los derechos de explotación sobre
+      los mismos más allá de lo estrictamente necesario para el correcto uso de la web.
+    </p>
+    <p>
+      Las recetas publicadas constituyen adaptaciones, versiones personales y
+      elaboraciones propias inspiradas en la tradición culinaria. De conformidad
+      con el artículo 32 del Real Decreto Legislativo 1/1996, de 12 de abril,
+      por el que se aprueba el texto refundido de la Ley de Propiedad Intelectual,
+      cualquier cita o referencia se realiza con fines informativos y divulgativos.
+      Si algún titular de derechos considera que un contenido vulnera sus derechos,
+      puede dirigirse a <a href="mailto:contacto@mil-recetas.com">contacto@mil-recetas.com</a>
+      solicitando la retirada o rectificación correspondiente.
+    </p>
+    <p>
+      Queda prohibida la reproducción, distribución, comunicación pública y
+      transformación, total o parcial, de los contenidos del Sitio sin la
+      autorización expresa del titular, salvo en los casos legalmente previstos.
+    </p>
+
+    <h2>5. Exclusión de garantías y responsabilidad</h2>
+    <p>
+      El titular no se hace responsable, en ningún caso, de los daños y perjuicios
+      de cualquier naturaleza que pudieran ocasionar, a título enunciativo:
+      errores u omisiones en los contenidos, falta de disponibilidad del Sitio o
+      la transmisión de virus o programas maliciosos en los contenidos, a pesar
+      de haber adoptado todas las medidas tecnológicas necesarias para evitarlo.
+    </p>
+    <p>
+      Las recetas e información nutricional se publican con carácter meramente
+      orientativo y no constituyen consejo médico, dietético ni profesional.
+      El usuario es responsable de comprobar la idoneidad de los ingredientes en
+      caso de alergias, intolerancias u otras condiciones de salud.
+    </p>
+
+    <h2>6. Enlaces a terceros</h2>
+    <p>
+      El Sitio puede contener enlaces a páginas de terceros sobre cuyo contenido
+      el titular no ejerce control alguno y respecto de los cuales declina toda
+      responsabilidad. La inclusión de tales enlaces no implica recomendación,
+      invitación o suscripción a las manifestaciones, contenidos o servicios
+      proveídos en el sitio enlazado.
+    </p>
+
+    <h2>7. Publicidad</h2>
+    <p>
+      El Sitio puede mostrar publicidad a través de Google AdSense u otras redes
+      publicitarias. Estos proveedores pueden utilizar cookies y tecnologías
+      similares para mostrar anuncios basados en visitas previas. Puede ampliar
+      esta información y gestionar sus preferencias en la
+      <a href={siteUrl('/privacidad')}>Política de privacidad</a> y en el banner
+      de consentimiento de cookies.
+    </p>
+
+    <h2>8. Protección de datos</h2>
+    <p>
+      El tratamiento de los datos personales recabados a través del Sitio
+      (formularios de contacto, suscripción al boletín o conversaciones del chat)
+      se rige por el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018,
+      de 5 de diciembre, de Protección de Datos Personales y garantía de los
+      derechos digitales (LOPDGDD). La información detallada se encuentra en la
+      <a href={siteUrl('/privacidad')}>Política de privacidad</a>.
+    </p>
+
+    <h2>9. Legislación aplicable y jurisdicción</h2>
+    <p>
+      Las presentes condiciones se rigen por la legislación española. Para la
+      resolución de cualquier controversia derivada del acceso o uso del Sitio,
+      las partes se someten a los Juzgados y Tribunales del domicilio del usuario
+      cuando éste tenga la condición de consumidor; en otro caso, a los del
+      domicilio del titular.
+    </p>
+    <p>
+      Conforme al Reglamento (UE) 524/2013, se informa al usuario de la
+      existencia de la plataforma europea de resolución de litigios en línea,
+      accesible en
+      <a href="https://ec.europa.eu/consumers/odr" rel="nofollow noopener" target="_blank">https://ec.europa.eu/consumers/odr</a>.
+    </p>
+
+    <h2>10. Modificaciones</h2>
+    <p>
+      El titular se reserva el derecho a modificar el presente aviso legal en
+      cualquier momento. Las modificaciones serán efectivas desde su publicación
+      en el Sitio. Se recomienda al usuario revisar periódicamente esta página.
+    </p>
+
+    <p>Para cualquier consulta puede contactar en <a href="mailto:contacto@mil-recetas.com">contacto@mil-recetas.com</a>.</p>
   </div>
 </Layout>
