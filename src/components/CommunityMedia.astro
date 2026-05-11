@@ -1,0 +1,177 @@
+---
+import type { CommunityMedia } from '../lib/community-media';
+
+interface Props {
+  media: CommunityMedia;
+  recipeTitle: string;
+}
+
+const { media, recipeTitle } = Astro.props as Props;
+const { photos, video } = media;
+const hasMedia = photos.length > 0 || !!video;
+
+const subject = encodeURIComponent(`Foto/vídeo para receta: ${recipeTitle}`);
+const body = encodeURIComponent(
+  `Hola, os mando ${''}foto/vídeo para la receta "${recipeTitle}".\n\n` +
+    `Nombre con el que quiero aparecer:\n` +
+    `Link a mi perfil (opcional, Instagram/web):\n\n` +
+    `[Adjunta aquí tus fotos o el enlace de YouTube del vídeo]\n`,
+);
+const mailto = `mailto:contacto@mil-recetas.com?subject=${subject}&body=${body}`;
+---
+<section class="community-media" aria-labelledby="community-media-title">
+  <h2 id="community-media-title">Fotos y vídeo de la comunidad</h2>
+
+  {video && (
+    <figure class="community-video">
+      <div class="yt-wrap">
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}`}
+          title={video.title || `Vídeo tutorial: ${recipeTitle}`}
+          loading="lazy"
+          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      </div>
+      <figcaption>
+        🎬 Vídeo tutorial enviado por{' '}
+        {video.link ? (
+          <a href={video.link} rel="nofollow ugc external" target="_blank">{video.contributor}</a>
+        ) : (
+          <strong>{video.contributor}</strong>
+        )}
+        {video.title && <span class="vt"> · {video.title}</span>}
+      </figcaption>
+    </figure>
+  )}
+
+  {photos.length > 0 && (
+    <div class="community-carousel" role="region" aria-label="Fotos enviadas por la comunidad">
+      <div class="carousel-track">
+        {photos.map((p) => (
+          <figure class="carousel-item">
+            <img src={p.src} alt={p.alt} loading="lazy" decoding="async" />
+            <figcaption>
+              📷 Foto de{' '}
+              {p.link ? (
+                <a href={p.link} rel="nofollow ugc external" target="_blank">{p.contributor}</a>
+              ) : (
+                <strong>{p.contributor}</strong>
+              )}
+              {p.caption && <span class="cap"> · {p.caption}</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <aside class="community-cta">
+    {!hasMedia ? (
+      <p>
+        <strong>¿Has cocinado esta receta?</strong> Aún no tenemos fotos ni vídeo de la comunidad
+        para <em>{recipeTitle}</em>. Sé el primero en colaborar: envíanos tu foto o un enlace a tu
+        vídeo tutorial y aparecerás con tu nombre en esta página.
+      </p>
+    ) : (
+      <p>
+        ¿Tú también la has hecho? Envíanos tu foto y aparecerás aquí como colaborador.
+      </p>
+    )}
+    <p class="cta-actions">
+      <a class="btn-primary" href={mailto}>Enviar foto o vídeo por email</a>
+      <a class="btn-link" href="/colaboradores">Ver colaboradores</a>
+    </p>
+    <p class="cta-note">
+      Escríbenos a <a href="mailto:contacto@mil-recetas.com">contacto@mil-recetas.com</a> indicando
+      el nombre con el que quieres aparecer y, si quieres, un enlace a tu perfil (Instagram, blog…).
+    </p>
+  </aside>
+</section>
+
+<style>
+  .community-media {
+    margin: 2.5rem auto;
+    padding: 1.5rem;
+    max-width: 980px;
+    background: var(--c-crema, #faf6ef);
+    border-radius: 10px;
+  }
+  .community-media h2 {
+    margin-top: 0;
+  }
+  .community-video {
+    margin: 0 0 1.5rem;
+  }
+  .yt-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .yt-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .community-video figcaption,
+  .carousel-item figcaption {
+    margin-top: .4rem;
+    font-size: .9rem;
+    color: var(--c-grafito, #444);
+  }
+  .community-carousel {
+    margin: 1rem 0 1.5rem;
+  }
+  .carousel-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: .5rem;
+  }
+  .carousel-item {
+    flex: 0 0 80%;
+    max-width: 420px;
+    scroll-snap-align: start;
+    margin: 0;
+  }
+  @media (min-width: 700px) {
+    .carousel-item { flex-basis: 45%; }
+  }
+  .carousel-item img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+  .community-cta {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid var(--c-tomate, #c0392b);
+  }
+  .community-cta p { margin: .4rem 0; }
+  .cta-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin: .8rem 0; }
+  .btn-primary {
+    display: inline-block;
+    padding: .55rem 1rem;
+    background: var(--c-tomate, #c0392b);
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-link { align-self: center; }
+  .cta-note { font-size: .85rem; color: var(--c-grafito, #555); }
+</style>

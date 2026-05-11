@@ -5,8 +5,10 @@ import StarRating from '../../components/StarRating.astro';
 import RelatedSection from '../../components/RelatedSection.astro';
 import { api, type RecipeDetail, type RecipeSummary } from '../../lib/api';
 import { recipeUrl, slugify, parseIdSlug, categoryUrl } from '../../lib/slug';
-import { metaDescription, recipeJsonLd, breadcrumbJsonLd, ogImageFor, siteUrl } from '../../lib/seo';
+import { metaDescription, recipeJsonLd, breadcrumbJsonLd, ogImageFor, siteUrl, splitSteps } from '../../lib/seo';
 import { recipeImage } from '../../lib/images';
+import CommunityMedia from '../../components/CommunityMedia.astro';
+import { getCommunityMedia } from '../../lib/community-media';
 
 export async function getStaticPaths() {
   const { recipes } = await api.seoRecipes();
@@ -27,6 +29,7 @@ const url = siteUrl(recipeUrl(recipe.id, recipe.title));
 const description = metaDescription(recipe.title, recipe.instructions, recipe.category);
 const ogImage = ogImageFor(recipe.category);
 const heroPhoto = recipeImage(recipe.id, recipe.title, recipe.category);
+const community = getCommunityMedia(recipe.id, recipe.title);
 
 const ld = [
   recipeJsonLd({
@@ -40,6 +43,14 @@ const ld = [
     ingredients: recipe.ingredients.map((i) => ({ raw_text: i.raw_text, name: i.name })),
     url,
     image: ogImage,
+    extraImages: community.photos.map((p) => p.src),
+    video: community.video
+      ? {
+          youtubeId: community.video.youtubeId,
+          title: community.video.title,
+          uploadDate: community.video.date,
+        }
+      : null,
   }),
   breadcrumbJsonLd([
     { name: 'Inicio', url: siteUrl('/') },
@@ -58,11 +69,7 @@ for (const ing of recipe.ingredients) {
   sections.get(key)!.push(ing);
 }
 
-// Pasos: split por saltos de línea o números.
-const steps = recipe.instructions
-  .split(/\n+|(?<=\.)\s+(?=\d+[\.\)])/)
-  .map((s) => s.replace(/^\d+[\.\)]\s*/, '').trim())
-  .filter(Boolean);
+const steps = splitSteps(recipe.instructions);
 
 const titleNice = recipe.title
   .toLowerCase()
@@ -140,7 +147,7 @@ const titleNice = recipe.title
     <h2>Elaboración</h2>
     {steps.length > 1 ? (
       <ol>
-        {steps.map((s) => <li>{s}</li>)}
+        {steps.map((s, i) => <li id={`paso-${i + 1}`}>{s}</li>)}
       </ol>
     ) : (
       <p style="white-space: pre-wrap;">{recipe.instructions}</p>
@@ -150,6 +157,10 @@ const titleNice = recipe.title
 
     <StarRating recipeId={recipe.id} />
   </article>
+
+  <div class="container">
+    <CommunityMedia media={community} recipeTitle={titleNice} />
+  </div>
 
   <hr class="section-rule" />
 

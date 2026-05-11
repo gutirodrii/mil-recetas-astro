@@ -1,0 +1,144 @@
+---
+import Layout from '../components/Layout.astro';
+import { api, type RecipeSummary } from '../lib/api';
+import { recipeUrl, slugify } from '../lib/slug';
+import { siteUrl, breadcrumbJsonLd, collectionJsonLd } from '../lib/seo';
+import { getAllContributors } from '../lib/community-media';
+
+const { recipes } = await api.seoRecipes();
+const titleById = new Map<number, string>(recipes.map((r: RecipeSummary) => [r.id, r.title]));
+const contributors = getAllContributors((id) => titleById.get(id) ?? null);
+
+const totalPhotos = contributors.reduce((s, c) => s + c.photoCount, 0);
+const totalVideos = contributors.reduce((s, c) => s + c.videoCount, 0);
+
+const url = siteUrl('/colaboradores');
+const title = 'Colaboradores';
+const description =
+  'Personas que han enviado fotos y vídeos para enriquecer las recetas de Mil Recetas. ' +
+  'Únete tú también: envía tu foto o vídeo tutorial y aparecerás aquí.';
+
+const ld = [
+  collectionJsonLd(title, description, url),
+  breadcrumbJsonLd([
+    { name: 'Inicio', url: siteUrl('/') },
+    { name: 'Colaboradores', url },
+  ]),
+];
+
+const subject = encodeURIComponent('Quiero colaborar con foto/vídeo');
+const mailto = `mailto:contacto@mil-recetas.com?subject=${subject}`;
+---
+<Layout title={title} description={description} canonical={url} jsonLd={ld}>
+  <div class="container-narrow" style="padding-top: 2rem;">
+    <p class="kicker">Comunidad</p>
+    <h1>Colaboradores de Mil Recetas</h1>
+    <p class="dek">
+      Estas son las personas que aportan fotos y vídeos tutoriales a las recetas. Gracias a
+      ellas el recetario es más vivo, real y útil para todos los que cocinan en casa.
+    </p>
+
+    {contributors.length > 0 && (
+      <p class="byline">
+        <strong>{contributors.length}</strong> colaborador{contributors.length === 1 ? '' : 'es'} ·
+        <strong> {totalPhotos}</strong> foto{totalPhotos === 1 ? '' : 's'} ·
+        <strong> {totalVideos}</strong> vídeo{totalVideos === 1 ? '' : 's'}
+      </p>
+    )}
+
+    <section class="cta-box">
+      <h2 style="margin-top:0;">¿Quieres aparecer aquí?</h2>
+      <p>
+        Cualquiera puede colaborar. Envíanos por email tus fotos de una receta hecha en casa o
+        el enlace a tu vídeo tutorial en YouTube. Si lo aprobamos, lo añadiremos a la receta
+        correspondiente con tu nombre y, si quieres, un enlace a tu Instagram o blog.
+      </p>
+      <p>
+        <a class="btn-primary" href={mailto}>Escribir a contacto@mil-recetas.com</a>
+      </p>
+      <ul class="benefits">
+        <li>📷 Tu nombre visible bajo cada foto o vídeo.</li>
+        <li>🔗 Link opcional a tu perfil (Instagram, blog, web).</li>
+        <li>🏅 Insignia de colaborador y posición en este ranking.</li>
+      </ul>
+    </section>
+
+    {contributors.length > 0 ? (
+      <section class="contrib-list">
+        <h2>Ranking de colaboradores</h2>
+        <ol>
+          {contributors.map((c, idx) => (
+            <li class="contrib-item">
+              <div class="contrib-head">
+                <span class="rank">#{idx + 1}</span>
+                <span class="name">
+                  {c.link ? (
+                    <a href={c.link} rel="nofollow ugc external" target="_blank">{c.name}</a>
+                  ) : (
+                    c.name
+                  )}
+                </span>
+                <span class="counts">
+                  {c.photoCount > 0 && <span>📷 {c.photoCount}</span>}
+                  {c.videoCount > 0 && <span>🎬 {c.videoCount}</span>}
+                </span>
+              </div>
+              <ul class="recipe-links">
+                {c.recipes.map((r) => (
+                  <li><a href={recipeUrl(r.id, r.title)}>{r.title}</a></li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ) : (
+      <section class="contrib-list">
+        <h2>Aún no hay colaboradores</h2>
+        <p>
+          Esta página todavía está vacía. <a href={mailto}>Sé el primero</a> en aportar una foto
+          o vídeo de tus recetas favoritas.
+        </p>
+      </section>
+    )}
+  </div>
+
+  <style>
+    .cta-box {
+      margin: 2rem 0;
+      padding: 1.25rem 1.5rem;
+      background: var(--c-crema, #faf6ef);
+      border-left: 4px solid var(--c-tomate, #c0392b);
+      border-radius: 8px;
+    }
+    .cta-box .benefits { padding-left: 1.2rem; }
+    .btn-primary {
+      display: inline-block;
+      padding: .55rem 1rem;
+      background: var(--c-tomate, #c0392b);
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .contrib-list ol { list-style: none; padding: 0; }
+    .contrib-item {
+      padding: 1rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .contrib-head {
+      display: flex;
+      gap: .75rem;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    .rank { font-weight: 700; color: var(--c-tomate, #c0392b); }
+    .name { font-weight: 600; font-size: 1.1rem; }
+    .counts { color: var(--c-grafito, #555); font-size: .9rem; display: flex; gap: .6rem; }
+    .recipe-links {
+      margin: .4rem 0 0;
+      padding-left: 1.2rem;
+      font-size: .92rem;
+    }
+  </style>
+</Layout>

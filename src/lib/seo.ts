@@ -29,26 +29,80 @@ interface RecipeForLd {
   ingredients: Array<{ raw_text: string; name: string }>;
   url: string;
   image: string;
+  extraImages?: string[];
+  video?: {
+    youtubeId: string;
+    title?: string | null;
+    uploadDate?: string | null;
+    description?: string | null;
+  } | null;
+}
+
+export function splitSteps(instructions: string): string[] {
+  return instructions
+    .split(/\n+|(?<=\.)\s+(?=\d+[\.\)])/)
+    .map((s) => s.replace(/^\d+[\.\)]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+function stepName(text: string, idx: number): string {
+  const firstSentence = text.split(/[.;]/)[0].trim();
+  const short = firstSentence.length > 60 ? firstSentence.slice(0, 57).trimEnd() + '…' : firstSentence;
+  return short || `Paso ${idx + 1}`;
+}
+
+function buildKeywords(title: string, category: string | null, ingredients: Array<{ name: string }>): string {
+  const names = ingredients
+    .map((i) => (i.name || '').trim().toLowerCase())
+    .filter(Boolean);
+  const unique = Array.from(new Set(names)).slice(0, 6);
+  const parts = [title.toLowerCase(), category?.toLowerCase(), ...unique].filter(Boolean) as string[];
+  return Array.from(new Set(parts)).join(', ');
 }
 
 export function recipeJsonLd(r: RecipeForLd): string {
+  const steps = splitSteps(r.instructions);
+  const images = [r.image, ...(r.extraImages ?? []).map((u) => (u.startsWith('http') ? u : siteUrl(u)))];
+  const description = truncate(r.instructions, 250);
+
+  const video = r.video
+    ? {
+        '@type': 'VideoObject',
+        name: r.video.title || `Vídeo tutorial: ${r.title}`,
+        description: r.video.description || description,
+        thumbnailUrl: `https://i.ytimg.com/vi/${r.video.youtubeId}/hqdefault.jpg`,
+        uploadDate: r.video.uploadDate || new Date().toISOString().slice(0, 10),
+        embedUrl: `https://www.youtube.com/embed/${r.video.youtubeId}`,
+        contentUrl: `https://www.youtube.com/watch?v=${r.video.youtubeId}`,
+      }
+    : undefined;
+
   const ld: Record<string, unknown> = {
     '@context': 'https://schema.org/',
     '@type': 'Recipe',
     name: r.title,
-    image: [r.image],
-    description: truncate(r.instructions, 250),
+    image: images,
+    description,
     recipeCategory: r.category ?? undefined,
+    recipeCuisine: 'Española',
     recipeYield: r.servings_text ?? (r.servings_n ? `${r.servings_n} raciones` : undefined),
     totalTime: r.total_time_min ? `PT${r.total_time_min}M` : undefined,
+    keywords: buildKeywords(r.title, r.category, r.ingredients),
+    author: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE,
+    },
     recipeIngredient: r.ingredients.map((i) => i.raw_text || i.name),
-    recipeInstructions: r.instructions
-      .split(/\n+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((text) => ({ '@type': 'HowToStep', text })),
+    recipeInstructions: steps.map((text, idx) => ({
+      '@type': 'HowToStep',
+      name: stepName(text, idx),
+      text,
+      url: `${r.url}#paso-${idx + 1}`,
+    })),
     url: r.url,
     inLanguage: 'es',
+    video,
   };
   return JSON.stringify(ld);
 }
