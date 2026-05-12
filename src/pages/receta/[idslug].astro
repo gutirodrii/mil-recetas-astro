@@ -97,6 +97,12 @@ const titleNice = recipe.title
 
   <figure class="article-hero">
     <img src={heroPhoto.src} alt={heroPhoto.alt} loading="eager" fetchpriority="high" />
+    {heroPhoto.source === 'category' && (
+      <figcaption class="article-hero__no-photo">
+        Esta receta aún no tiene foto propia.
+        <a href="/colaboradores">¿Nos ayudas a añadir una?</a>
+      </figcaption>
+    )}
   </figure>
 
   <header class="article-head">

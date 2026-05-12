@@ -31,6 +31,11 @@ const imgLg = recipe.source === 'pdf' ? recipe.src : cat.lg;
       loading="lazy"
       decoding="async"
     />
+    {recipe.source === 'category' && (
+      <span class="tile__no-photo-badge" aria-label="Sin foto propia, puedes colaborar añadiendo una">
+        Sin foto · colabora
+      </span>
+    )}
   </div>
   {!hideCat && category && <div class="tile__cat">{category}</div>}
   <h3 class="tile__title">{title}</h3>
